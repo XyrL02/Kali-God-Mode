@@ -1,0 +1,34 @@
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# Downloaded tool binaries (not tracked in git)
+*.exe
+*.zip
+*.tar.gz
+*.deb
+
+# Credentials and sensitive data
+creds.txt
+tool-credentials.txt
+*.env
+*.key
+*.pem
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Build artifacts
+*.egg-info/
+build/
+dist/
