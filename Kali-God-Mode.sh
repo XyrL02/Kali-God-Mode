@@ -60,7 +60,7 @@ show_menu() {
     echo
     echo "  [2] Web App Pentest Toolkit"
     echo "      ffuf, feroxbuster, wfuzz, dalfox, XSStrike, arjun,"
-    echo "      httpx, katana, waybackurls, ..."
+    echo "      httpx, katana, waybackurls, GhostRecon, ..."
     echo
     echo "  [3] Red Team Toolkit"
     echo "      Sliver C2, donut, mimikatz, Rubeus, Ligolo-ng, ..."
@@ -94,12 +94,32 @@ parse_selections() {
     done
 }
 
+# ---- Optional defaults checklist -------------------------------------
+show_optional_defaults() {
+    section "Optional Default Tools"
+    echo
+    echo "  The following tools are optional and can be included in the"
+    echo "  default installation. Toggle with y/n."
+    echo
+    echo "  [P] pimpmykali — Kali hardening & pre-configured toolset"
+    echo "      WARNING: runs an interactive installer. If it hangs,"
+    echo "      press Ctrl+C to skip it safely."
+    echo
+    read -rp "  Install pimpmykali? [y/N]: " pimpmykali_choice
+    echo
+    case "$pimpmykali_choice" in
+        y|Y|yes|YES) INSTALL_PIMPMYKALI=true ;;
+        *)           INSTALL_PIMPMYKALI=false ;;
+    esac
+}
+
 # ---- CLI flag parsing ------------------------------------------------
 parse_flags() {
     INSTALL_AD=false
     INSTALL_WEBAPP=false
     INSTALL_RED=false
     INSTALL_BLUE=false
+    INSTALL_PIMPMYKALI=false
 
     for flag in "$@"; do
         case "$flag" in
@@ -108,9 +128,13 @@ parse_flags() {
             --webapp)       INSTALL_WEBAPP=true ;;
             --red-team)     INSTALL_RED=true ;;
             --blue-team)    INSTALL_BLUE=true ;;
+            --pimpmykali)   INSTALL_PIMPMYKALI=true ;;
             -h|--help)
-                echo "Usage: $0 [--all|--ad|--webapp|--red-team|--blue-team]"
+                echo "Usage: $0 [--all|--ad|--webapp|--red-team|--blue-team] [--pimpmykali]"
                 echo "       $0   (interactive menu)"
+                echo
+                echo "Optional flags:"
+                echo "  --pimpmykali   Include pimpmykali in default installation"
                 exit 0
                 ;;
             *)              warn "Unknown flag: $flag" ;;
@@ -124,14 +148,12 @@ main() {
     info "Toolkits install to: $TOOLKIT_ROOT"
     info "Shared tools:        $TOOLKIT_ROOT/_shared/"
 
-    # Always install defaults first
-    install_defaults
-
     # Determine what to install
     INSTALL_AD=false
     INSTALL_WEBAPP=false
     INSTALL_RED=false
     INSTALL_BLUE=false
+    INSTALL_PIMPMYKALI=false
 
     if [ $# -gt 0 ]; then
         # CLI flags mode
@@ -140,7 +162,14 @@ main() {
         # Interactive menu mode
         show_menu
         parse_selections
+        show_optional_defaults
     fi
+
+    # Export for _defaults.sh
+    export INSTALL_PIMPMYKALI
+
+    # Always install defaults first (pimpmykali only if selected)
+    install_defaults
 
     # Run selected modules
     if $INSTALL_AD; then
@@ -208,6 +237,9 @@ print_summary() {
     $INSTALL_WEBAPP && echo "    ✅ Web App Pentest Toolkit"  || echo "    ⬜ Web App Pentest Toolkit (skipped)"
     $INSTALL_RED    && echo "    ✅ Red Team Toolkit"         || echo "    ⬜ Red Team Toolkit (skipped)"
     $INSTALL_BLUE   && echo "    ✅ Blue Team Toolkit"        || echo "    ⬜ Blue Team Toolkit (skipped)"
+    echo
+    echo -e "  ${CYAN}Optional Defaults:${RESET}"
+    $INSTALL_PIMPMYKALI && echo "    ✅ pimpmykali"           || echo "    ⬜ pimpmykali (skipped)"
     echo
 }
 
